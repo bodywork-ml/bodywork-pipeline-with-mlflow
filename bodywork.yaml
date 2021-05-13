@@ -20,7 +20,7 @@ stages:
     memory_request_mb: 100
     batch:
       max_completion_time_seconds: 30
-      retries: 2
+      retries: 1
   scoring_service:
     executable_module_path: serve_model.py
     requirements:
