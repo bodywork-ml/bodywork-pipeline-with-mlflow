@@ -85,6 +85,8 @@ $ bodywork deployment display \
     --name=initial-deployment
 ```
 
+Once the deployment has completed, browse to the MLflow UI to check on the model metrics that were logged during training.
+
 ## Testing the Model-Scoring Service
 
 Service deployments are accessible via HTTP from within the cluster - they are not exposed to the public internet, unless you have [installed an ingress controller](https://bodywork.readthedocs.io/en/latest/kubernetes/#configuring-ingress) in your cluster. The simplest way to test a service from your local machine, is by using a local proxy server to enable access to your cluster. This can be achieved by issuing the following command,
