@@ -7,8 +7,8 @@ stages:
   stage_1_train_model:
     executable_module_path: train_model.py
     requirements:
-      - boto3==1.16.15
       - joblib==0.17.0
+      - mlflow==1.17.0
       - pandas==1.1.4
       - scikit-learn==0.23.2
     cpu_request: 0.5
@@ -21,6 +21,7 @@ stages:
     requirements:
       - Flask==1.1.2
       - joblib==0.17.0
+      - mlflow==1.17.0
       - numpy==1.19.4
       - scikit-learn==0.23.2
     cpu_request: 0.25
