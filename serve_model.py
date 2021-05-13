@@ -92,6 +92,6 @@ if __name__ == "__main__":
         print("Starting API server.")
         app.run(host="0.0.0.0", port=5000)
     except Exception as e:
-        msg = f'scoring-service failed with exception: {e}'
+        msg = f"scoring-service failed with exception: {e}"
         log.error(msg)
         raise RuntimeError(msg)

@@ -38,7 +38,7 @@ def main() -> None:
         features, labels = pre_process_data(data)
         train_model(features, labels)
     except Exception as e:
-        msg = f'training stage failed with exception: {e}'
+        msg = f"training stage failed with exception: {e}"
         log.error(msg)
         raise RuntimeError(msg)
 
