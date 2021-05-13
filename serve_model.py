@@ -1,7 +1,7 @@
 """
-This module defines what will happen in 'stage-2-deploy-scoring-service':
+This module defines what will happen in the 'scoring-service' stage:
 
-- download ML model and load into memory;
+- get the latest production model from MLflow and load it into memory;
 - define ML scoring REST API endpoints; and,
 - start service.
 

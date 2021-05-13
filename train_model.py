@@ -1,10 +1,10 @@
 """
-This module defines what will happen in 'stage-1-train-model':
+This module defines what will happen in the 'train-model' stage:
 
 - download dataset;
 - pre-process data into features and labels;
 - train machine learning model; and,
-- save model to cloud stirage (AWS S3).
+- log and register the model with MLflow.
 """
 from urllib.request import urlopen
 from subprocess import CalledProcessError, run
