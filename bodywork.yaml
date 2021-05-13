@@ -11,6 +11,11 @@ stages:
       - numpy==1.19.4
       - pandas==1.1.4
       - scikit-learn==0.23.2
+    secrets:
+      AWS_ACCESS_KEY_ID: mlflow-credentials
+      AWS_SECRET_ACCESS_KEY: mlflow-credentials
+      AWS_DEFAULT_REGION: mlflow-credentials
+      MLFLOW_TRACKING_URI: mlflow-credentials
     cpu_request: 0.5
     memory_request_mb: 100
     batch:
@@ -23,6 +28,11 @@ stages:
       - mlflow==1.17.0
       - numpy==1.19.4
       - scikit-learn==0.23.2
+    secrets:
+      AWS_ACCESS_KEY_ID: mlflow-credentials
+      AWS_SECRET_ACCESS_KEY: mlflow-credentials
+      AWS_DEFAULT_REGION: mlflow-credentials
+      MLFLOW_TRACKING_URI: mlflow-credentials
     cpu_request: 0.25
     memory_request_mb: 100
     service:
