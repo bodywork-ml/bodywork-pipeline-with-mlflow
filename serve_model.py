@@ -29,11 +29,12 @@ from flask import Flask, jsonify, make_response, request, Response
 from sklearn.base import BaseEstimator
 
 from train_model import MLFLOW_EXPERIMENT, MLFLOW_MODEL_NAME
-from utils import configure_mlflow
+from utils import configure_logger, configure_mlflow
 
 CLASS_TO_SPECIES_MAP = {0: "setosa", 1: "versicolor", 2: "virginica"}
 
 app = Flask(__name__)
+log = configure_logger()
 
 
 @app.route("/iris/v1/score", methods=["POST"])
@@ -85,7 +86,12 @@ def model_predictions(features: np.ndarray) -> Dict[str, str]:
 
 
 if __name__ == "__main__":
-    model = get_model()
-    print(f"Loaded model={model}.")
-    print("Starting API server.")
-    app.run(host="0.0.0.0", port=5000)
+    try:
+        model = get_model()
+        print(f"Loaded model={model}.")
+        print("Starting API server.")
+        app.run(host="0.0.0.0", port=5000)
+    except Exception as e:
+        msg = f'scoring-service failed with exception: {e}'
+        log.error(msg)
+        raise RuntimeError(msg)

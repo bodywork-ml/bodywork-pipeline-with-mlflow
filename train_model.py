@@ -18,7 +18,7 @@ from sklearn.metrics import f1_score, balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
-from utils import configure_mlflow
+from utils import configure_logger, configure_mlflow
 
 MLFLOW_EXPERIMENT = "iris-classifier"
 MLFLOW_MODEL_NAME = f"{MLFLOW_EXPERIMENT}--sklearn-decision-tree"
@@ -27,18 +27,25 @@ DATA_URL = (
     "/data/iris_classification_data.csv"
 )
 
+log = configure_logger()
+
 
 def main() -> None:
     """Main script to be executed."""
-    configure_mlflow(MLFLOW_EXPERIMENT)
-    data = download_dataset(DATA_URL)
-    features, labels = pre_process_data(data)
-    train_model(features, labels)
+    try:
+        configure_mlflow(MLFLOW_EXPERIMENT)
+        data = download_dataset(DATA_URL)
+        features, labels = pre_process_data(data)
+        train_model(features, labels)
+    except Exception as e:
+        msg = f'training stage failed with exception: {e}'
+        log.error(msg)
+        raise RuntimeError(msg)
 
 
 def download_dataset(url: str) -> pd.DataFrame:
     """Get data from cloud object storage."""
-    print(f"Downloading training data from {DATA_URL}.")
+    log.info(f"Downloading training data from {DATA_URL}.")
     data_file = urlopen(url)
     return pd.read_csv(data_file)
 
@@ -59,7 +66,7 @@ def pre_process_data(data: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def log_model_metrics(y_actual: np.ndarray, y_predicted: np.ndarray) -> None:
-    """Print model evaluation metrics to stdout."""
+    """log.info model evaluation metrics to stdout."""
     accuracy = balanced_accuracy_score(y_actual, y_predicted, adjusted=True)
     f1 = f1_score(y_actual, y_predicted, average="weighted")
     mlflow.log_metric("accuracy", accuracy)
@@ -89,7 +96,7 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
             features, labels, test_size=0.2, stratify=labels, random_state=random_state
         )
 
-        print("Training iris decision tree classifier.")
+        log.info("Training iris decision tree classifier.")
         mlflow.log_param("random_state", random_state)
         iris_tree_classifier = DecisionTreeClassifier(
             class_weight="balanced", random_state=random_state
@@ -98,7 +105,7 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
         test_data_predictions = iris_tree_classifier.predict(X_test)
         log_model_metrics(y_test, test_data_predictions)
 
-        print("Registering new model with MLflow.")
+        log.info("Registering new model with MLflow.")
         mlflow.sklearn.log_model(
             sk_model=iris_tree_classifier, artifact_path=MLFLOW_MODEL_NAME
         )
@@ -107,7 +114,7 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
             name=MLFLOW_MODEL_NAME,
         )
 
-        print("Transitioning new model to production.")
+        log.info("Transitioning new model to production.")
         mlflow.tracking.MlflowClient().transition_model_version_stage(
             name=MLFLOW_MODEL_NAME,
             version=int(new_model_metadata.version),
