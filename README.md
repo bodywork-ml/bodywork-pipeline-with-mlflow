@@ -67,7 +67,7 @@ Note, that we have used the same secret for configuring the MLflow tracking URI
 
 ### Step 4 - Deploy the Pipeline
 
-To test the ML pipeline, using a workflow-controller running on your local machine and interacting with your Kubernetes cluster, run,
+To trigger the deployment run,
 
 ```text
 $ bodywork deployment create \
