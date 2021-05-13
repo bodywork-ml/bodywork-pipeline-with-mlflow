@@ -21,46 +21,50 @@ The expected response should be,
     "model_info": "DecisionTreeClassifier(class_weight='balanced', random_state=42)"
 }
 """
-from urllib.request import urlopen
 from typing import Dict
 
+import mlflow
 import numpy as np
 from flask import Flask, jsonify, make_response, request, Response
-from joblib import load
 from sklearn.base import BaseEstimator
 
-MODEL_URL = 'http://bodywork-ml-pipeline-project.s3.eu-west-2.amazonaws.com/models/iris_tree_classifier.joblib'
-CLASS_TO_SPECIES_MAP = {0: 'setosa', 1: 'versicolor', 2: 'virginica'}
+from train_model import MLFLOW_EXPERIMENT, MLFLOW_MODEL_NAME
+from utils import configure_mlflow
+
+CLASS_TO_SPECIES_MAP = {0: "setosa", 1: "versicolor", 2: "virginica"}
 
 app = Flask(__name__)
 
 
-@app.route('/iris/v1/score', methods=['POST'])
+@app.route("/iris/v1/score", methods=["POST"])
 def score() -> Response:
     """Iris species classification API endpoint"""
     request_data = request.json
     X = make_features_from_request_data(request_data)
     model_output = model_predictions(X)
-    response_data = jsonify({**model_output, 'model_info': str(model)})
+    response_data = jsonify({**model_output, "model_info": str(model)})
     return make_response(response_data)
 
 
-def get_model(url: str) -> BaseEstimator:
+def get_model() -> BaseEstimator:
     """Get model from cloud object storage."""
-    model_file = urlopen(url)
-    return load(model_file)
+    configure_mlflow(MLFLOW_EXPERIMENT)
+    model = mlflow.sklearn.load_model(
+        model_uri=f"models:/{MLFLOW_MODEL_NAME}/Production"
+    )
+    return model
 
 
-def make_features_from_request_data(
-    request_data: Dict[str, float]
-) -> np.ndarray:
+def make_features_from_request_data(request_data: Dict[str, float]) -> np.ndarray:
     """Create feature array from JSON data parsed as dictionay."""
     X = np.array(
-        [request_data['sepal_length'],
-         request_data['sepal_width'],
-         request_data['petal_length'],
-         request_data['petal_width']],
-        ndmin=2
+        [
+            request_data["sepal_length"],
+            request_data["sepal_width"],
+            request_data["petal_length"],
+            request_data["petal_width"],
+        ],
+        ndmin=2,
     )
     return X
 
@@ -71,18 +75,17 @@ def model_predictions(features: np.ndarray) -> Dict[str, str]:
     class_probabilities = model.predict_proba(features)[0]
     species_prediction = CLASS_TO_SPECIES_MAP[class_prediction]
     species_probabilities = [
-        f'{k}={v}'
-        for k, v in zip(CLASS_TO_SPECIES_MAP.values(), class_probabilities)
+        f"{k}={v}" for k, v in zip(CLASS_TO_SPECIES_MAP.values(), class_probabilities)
     ]
     results = {
-        'species_prediction': species_prediction,
-        'probabilities': '|'.join(species_probabilities)
+        "species_prediction": species_prediction,
+        "probabilities": "|".join(species_probabilities),
     }
     return results
 
 
-if __name__ == '__main__':
-    model = get_model(MODEL_URL)
-    print(f'loaded model={model}')
-    print(f'starting API server')
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    model = get_model()
+    print(f"Loaded model={model}.")
+    print("Starting API server.")
+    app.run(host="0.0.0.0", port=5000)

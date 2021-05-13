@@ -13,7 +13,6 @@ from typing import Tuple
 import mlflow
 import numpy as np
 import pandas as pd
-from joblib import dump
 from sklearn.base import BaseEstimator
 from sklearn.metrics import f1_score, balanced_accuracy_score
 from sklearn.model_selection import train_test_split
@@ -22,6 +21,7 @@ from sklearn.tree import DecisionTreeClassifier
 from utils import configure_mlflow
 
 MLFLOW_EXPERIMENT = "iris-classifier"
+MLFLOW_MODEL_NAME = f"{MLFLOW_EXPERIMENT}--sklearn-decision-tree"
 DATA_URL = (
     "http://bodywork-ml-pipeline-project.s3.eu-west-2.amazonaws.com"
     "/data/iris_classification_data.csv"
@@ -99,17 +99,19 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
         log_model_metrics(y_test, test_data_predictions)
 
         print("Registering new model with MLflow.")
-        model_name = f"{MLFLOW_EXPERIMENT}--sklearn-decision-tree"
         mlflow.sklearn.log_model(
-            sk_model=iris_tree_classifier, artifact_path=model_name
+            sk_model=iris_tree_classifier, artifact_path=MLFLOW_MODEL_NAME
         )
         new_model_metadata = mlflow.register_model(
-            model_uri=f"runs:/{training_run.info.run_id}/{model_name}", name=model_name
+            model_uri=f"runs:/{training_run.info.run_id}/{MLFLOW_MODEL_NAME}",
+            name=MLFLOW_MODEL_NAME,
         )
 
         print("Transitioning new model to production.")
         mlflow.tracking.MlflowClient().transition_model_version_stage(
-            name=model_name, version=int(new_model_metadata.version), stage="Production"
+            name=MLFLOW_MODEL_NAME,
+            version=int(new_model_metadata.version),
+            stage="Production",
         )
 
 
