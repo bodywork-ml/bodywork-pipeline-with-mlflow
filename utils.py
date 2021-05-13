@@ -16,15 +16,15 @@ def configure_mlflow(experiment_name: str) -> None:
     provided by Minio).
     """
     try:
-        mlflow_tracking_uri = os.environ['MLFLOW_TRACKING_URI']
+        mlflow_tracking_uri = os.environ["MLFLOW_TRACKING_URI"]
     except KeyError:
-        raise RuntimeError('Cannot find env var MLFLOW_TRACKING_URI.')
+        raise RuntimeError("Cannot find env var MLFLOW_TRACKING_URI.")
 
     try:
-        os.environ['AWS_ACCESS_KEY_ID']
-        os.environ['AWS_SECRET_ACCESS_KEY']
+        os.environ["AWS_ACCESS_KEY_ID"]
+        os.environ["AWS_SECRET_ACCESS_KEY"]
     except KeyError:
-        msg = 'Cannot find env var AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY.'
+        msg = "Cannot find env var AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY."
         raise RuntimeError(msg)
 
     mlflow.set_tracking_uri(mlflow_tracking_uri)
