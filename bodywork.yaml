@@ -1,6 +1,6 @@
 version: "1.0"
 project:
-  name: bodywork-pipeline-with-mlflow
+  name: bodywork-mlflow-demo
   docker_image: bodyworkml/bodywork-core:latest
   DAG: train_model >> scoring_service
 stages:
