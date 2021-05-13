@@ -7,6 +7,7 @@ stages:
   train_model:
     executable_module_path: train_model.py
     requirements:
+      - boto3==1.16.15
       - mlflow==1.17.0
       - numpy==1.19.4
       - pandas==1.1.4
@@ -24,6 +25,7 @@ stages:
   scoring_service:
     executable_module_path: serve_model.py
     requirements:
+      - boto3==1.16.15
       - Flask==1.1.2
       - mlflow==1.17.0
       - numpy==1.19.4
