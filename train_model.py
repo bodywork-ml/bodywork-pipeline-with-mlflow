@@ -6,8 +6,8 @@ This module defines what will happen in 'stage-1-train-model':
 - train machine learning model; and,
 - save model to cloud stirage (AWS S3).
 """
-import os
 from urllib.request import urlopen
+from subprocess import CalledProcessError, run
 from typing import Tuple
 
 import mlflow
@@ -19,6 +19,8 @@ from sklearn.metrics import f1_score, balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
+from utils import configure_mlflow
+
 MLFLOW_EXPERIMENT = 'iris-classifier'
 DATA_URL = ('http://bodywork-ml-pipeline-project.s3.eu-west-2.amazonaws.com'
             '/data/iris_classification_data.csv')
@@ -26,40 +28,15 @@ DATA_URL = ('http://bodywork-ml-pipeline-project.s3.eu-west-2.amazonaws.com'
 
 def main() -> None:
     """Main script to be executed."""
-    configure_mlflow()
+    configure_mlflow(MLFLOW_EXPERIMENT)
     data = download_dataset(DATA_URL)
     features, labels = pre_process_data(data)
     train_model(features, labels)
 
 
-def configure_mlflow() -> None:
-    """Set tracking server URL and experiment.
-
-    The MLflow client requires that you pass it the URL of the MLflow
-    tracking server and that the client has the appropriate credentials
-    to access the object storage for logging models (which in this case
-    is via the AWS client library that is used to access object storage
-    provided by Minio).
-    """
-    try:
-        mlflow_tracking_uri = os.environ['MLFLOW_TRACKING_URI']
-    except KeyError:
-        raise RuntimeError('cannot find env var MLFLOW_TRACKING_URI')
-
-    try:
-        os.environ['AWS_ACCESS_KEY_ID']
-        os.environ['AWS_SECRET_ACCESS_KEY']
-    except KeyError:
-        msg = 'cannot find env var AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY'
-        raise RuntimeError(msg)
-
-    mlflow.set_tracking_uri(mlflow_tracking_uri)
-    mlflow.set_experiment(MLFLOW_EXPERIMENT)
-
-
 def download_dataset(url: str) -> pd.DataFrame:
     """Get data from cloud object storage."""
-    print(f'downloading training data from {DATA_URL}')
+    print(f'Downloading training data from {DATA_URL}.')
     data_file = urlopen(url)
     return pd.read_csv(data_file)
 
@@ -98,21 +75,35 @@ def log_model_metrics(
     mlflow.log_metric('f1', f1)
 
 
+def get_pipeline_git_commit_hash() -> str:
+    """The project's git commit to use as a versioning tag."""
+    try:
+        git_cmd = run(
+            ['git', 'rev-parse', '--short', 'HEAD'],
+            capture_output=True,
+            check=True,
+            encoding='utf-8'
+        )
+    except CalledProcessError:
+        raise RuntimeError('Could not get Git commit hash.')
+    return git_cmd.stdout
+
+
 def train_model(features: np.ndarray, labels: np.ndarray) -> None:
     """Train ML model and register with MLflow."""
-    with mlflow.start_run(run_name='retraining') as training_run:
-        random_state = np.random.randint(0, 100)
-        mlflow.log_param('random_state', random_state)
-
+    random_state = np.random.randint(0, 100)
+    run_name = f'pipeline-{get_pipeline_git_commit_hash()}'
+    with mlflow.start_run(run_name=run_name) as training_run:
         X_train, X_test, y_train, y_test = train_test_split(
             features,
             labels,
-            test_size=0.1,
+            test_size=0.2,
             stratify=labels,
             random_state=random_state
         )
 
-        print('training iris decision tree classifier')
+        print('Training iris decision tree classifier.')
+        mlflow.log_param('random_state', random_state)
         iris_tree_classifier = DecisionTreeClassifier(
             class_weight='balanced',
             random_state=random_state
@@ -121,8 +112,8 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
         test_data_predictions = iris_tree_classifier.predict(X_test)
         log_model_metrics(y_test, test_data_predictions)
 
-        print('registering new model with MLflow')
-        model_name = 'sklearn-decision-tree-classifier'
+        print('Registering new model with MLflow.')
+        model_name = f'{MLFLOW_EXPERIMENT}--sklearn-decision-tree'
         mlflow.sklearn.log_model(
             sk_model=iris_tree_classifier,
             artifact_path=model_name
@@ -132,7 +123,7 @@ def train_model(features: np.ndarray, labels: np.ndarray) -> None:
             name=model_name
         )
 
-        print('transitioning new model to production')
+        print('Transitioning new model to production.')
         mlflow.tracking.MlflowClient().transition_model_version_stage(
             name=model_name,
             version=int(new_model_metadata.version),
