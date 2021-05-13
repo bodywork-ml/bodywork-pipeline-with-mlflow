@@ -1,10 +1,10 @@
 version: "1.0"
 project:
-  name: bodywork-pipeline-mlflow
+  name: bodywork-pipeline-with-mlflow
   docker_image: bodyworkml/bodywork-core:latest
-  DAG: stage_1_train_model >> stage_2_scoring_service
+  DAG: train_model >> scoring_service
 stages:
-  stage_1_train_model:
+  train_model:
     executable_module_path: train_model.py
     requirements:
       - mlflow==1.17.0
@@ -16,7 +16,7 @@ stages:
     batch:
       max_completion_time_seconds: 30
       retries: 2
-  stage_2_scoring_service:
+  scoring_service:
     executable_module_path: serve_model.py
     requirements:
       - Flask==1.1.2
