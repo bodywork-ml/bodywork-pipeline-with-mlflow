@@ -39,7 +39,7 @@ def configure_mlflow(experiment_name: str) -> None:
 
     if (
         "MLFLOW_S3_ENDPOINT_URL" in os.environ
-        and os.environ["MLFLOW_S3_ENDPOINT_URL"] != ""
+        and os.environ["MLFLOW_S3_ENDPOINT_URL"] == ""
     ):
         del os.environ["MLFLOW_S3_ENDPOINT_URL"]
 
