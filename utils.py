@@ -32,15 +32,16 @@ def configure_mlflow(experiment_name: str) -> None:
     """
     try:
         mlflow_tracking_uri = os.environ["MLFLOW_TRACKING_URI"]
+        if mlflow_tracking_uri == "":
+            raise ValueError("MLFLOW_TRACKING_URI cannot be empty")
     except KeyError:
         raise RuntimeError("Cannot find env var MLFLOW_TRACKING_URI.")
 
-    try:
-        os.environ["AWS_ACCESS_KEY_ID"]
-        os.environ["AWS_SECRET_ACCESS_KEY"]
-    except KeyError:
-        msg = "Cannot find env var AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY."
-        raise RuntimeError(msg)
+    if (
+        "MLFLOW_S3_ENDPOINT_URL" in os.environ
+        and os.environ["MLFLOW_S3_ENDPOINT_URL"] != ""
+    ):
+        del os.environ["MLFLOW_S3_ENDPOINT_URL"]
 
     mlflow.set_tracking_uri(mlflow_tracking_uri)
     mlflow.set_experiment(experiment_name)
