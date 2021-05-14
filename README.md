@@ -46,7 +46,8 @@ bodywork secret create \
     --data AWS_ACCESS_KEY_ID=X \
            AWS_SECRET_ACCESS_KEY=X \ 
            AWS_DEFAULT_REGION=X \
-           MLFLOW_TRACKING_URI=http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000
+           MLFLOW_TRACKING_URI=http://bodywork-mlflow--server.mlflow.svc.cluster.local:5000 \
+           MLFLOW_S3_ENDPOINT_URL=null
 ```
 
 And then configuring each stage to look for the secrets, in the `bodywork.yaml` configuration file. For example,
@@ -63,7 +64,7 @@ stages:
       MLFLOW_S3_ENDPOINT_URL: mlflow-credentials
 ```
 
-Note, that we have used the same secret for configuring the MLflow tracking URI
+Note, that we have used the same secret for configuring the MLflow tracking URI and S3 endpoint URL. For the former, we use the domain name assigned to the MLflow tracking server within the cluster, while the latter is optional (set to `null` is not required), and made available for when you want to use other S3 compatible storage types (e.g. [Minio](https://min.io)).
 
 ### Step 4 - Deploy the Pipeline
 
