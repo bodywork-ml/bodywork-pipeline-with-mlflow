@@ -75,7 +75,8 @@ $ bodywork deployment create \
     --namespace=bodywork-mlflow-demo \
     --name=initial-deployment \
     --git-repo-url=https://github.com/bodywork-ml/bodywork-pipeline-with-mlflow \
-    --git-repo-branch=master
+    --git-repo-branch=master \
+    --local-workflow-controller
 ```
 
 You can check on the deployment's progress by using,
